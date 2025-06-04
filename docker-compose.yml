@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    container_name: anka-db
+    environment:
+      MYSQL_ROOT_PASSWORD: senhaSuperSecreta
+      MYSQL_DATABASE: anka
+      MYSQL_USER: ankauser
+      MYSQL_PASSWORD: senhaSuperSecreta
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./backend
+    container_name: anka-backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: mysql://ankauser:senhaSuperSecreta@db:3306/anka
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "npm install && npm run build && npm start"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: anka-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    command: >
+      sh -c "npm install && npm run dev -- --host"
+
+volumes:
+  db_data:
